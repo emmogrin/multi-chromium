@@ -94,6 +94,7 @@ You can safely run 1–2 containers on Termux VM.
 
 More than that may crash or lag. fr fr bro😂
 
+don't worry 😉, it automatically restarts there's no need for a Start code.
 
 
 ---
