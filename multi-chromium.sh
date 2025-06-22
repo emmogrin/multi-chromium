@@ -80,8 +80,13 @@ fi
 mkdir -p ~/chromium/multi
 cd ~/chromium/multi
 
-# Step 3: Create N docker-compose files
-for ((i=0; i<INSTANCE_COUNT; i++)); do
+# Step 3: Count existing containers to continue from last index
+existing_count=$(docker ps -a --format '{{.Names}}' | grep -c '^chromium[0-9]\+$')
+start_index=$existing_count
+end_index=$((existing_count + INSTANCE_COUNT - 1))
+
+# Step 4: Create docker-compose files
+for ((i=start_index; i<=end_index; i++)); do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
   CONFIG_DIR="/root/chromium/multi/config${i}"
@@ -89,38 +94,42 @@ for ((i=0; i<INSTANCE_COUNT; i++)); do
 
   USERNAME="${BASE_USER}${i}"
 
-  echo "services:" > docker-compose-${i}.yaml
-  echo "  chromium${i}:" >> docker-compose-${i}.yaml
-  echo "    image: lscr.io/linuxserver/chromium:latest" >> docker-compose-${i}.yaml
-  echo "    container_name: chromium${i}" >> docker-compose-${i}.yaml
-  echo "    security_opt:" >> docker-compose-${i}.yaml
-  echo "      - seccomp:unconfined" >> docker-compose-${i}.yaml
-  echo "    environment:" >> docker-compose-${i}.yaml
+  cat > docker-compose-${i}.yaml <<EOF
+services:
+  chromium${i}:
+    image: lscr.io/linuxserver/chromium:latest
+    container_name: chromium${i}
+    security_opt:
+      - seccomp:unconfined
+    environment:
+EOF
 
   if [[ "$USE_PASSWORD" == "y" || "$USE_PASSWORD" == "Y" ]]; then
     echo "      - CUSTOM_USER=${USERNAME}" >> docker-compose-${i}.yaml
     echo "      - PASSWORD=${CHROME_PASS}" >> docker-compose-${i}.yaml
   fi
 
-  echo "      - PUID=1000" >> docker-compose-${i}.yaml
-  echo "      - PGID=1000" >> docker-compose-${i}.yaml
-  echo "      - TZ=${TZ}" >> docker-compose-${i}.yaml
-  echo "      - CHROME_CLI=${HOMEPAGE}" >> docker-compose-${i}.yaml
-  echo "    volumes:" >> docker-compose-${i}.yaml
-  echo "      - ${CONFIG_DIR}:/config" >> docker-compose-${i}.yaml
-  echo "    ports:" >> docker-compose-${i}.yaml
-  echo "      - ${HTTP_PORT}:3000" >> docker-compose-${i}.yaml
-  echo "      - ${HTTPS_PORT}:3001" >> docker-compose-${i}.yaml
-  echo "    shm_size: \"1gb\"" >> docker-compose-${i}.yaml
-  echo "    restart: unless-stopped" >> docker-compose-${i}.yaml
+  cat >> docker-compose-${i}.yaml <<EOF
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - CHROME_CLI=${HOMEPAGE}
+    volumes:
+      - ${CONFIG_DIR}:/config
+    ports:
+      - ${HTTP_PORT}:3000
+      - ${HTTPS_PORT}:3001
+    shm_size: "1gb"
+    restart: unless-stopped
+EOF
 done
 
-# Step 4: Launch all containers
-for ((i=0; i<INSTANCE_COUNT; i++)); do
+# Step 5: Launch new containers
+for ((i=start_index; i<=end_index; i++)); do
   docker compose -f docker-compose-${i}.yaml up -d
 done
 
-# Step 5: Detect IP address
+# Step 6: Detect IP address
 if [[ "$VPS" == "y" || "$VPS" == "Y" ]]; then
   if command -v curl &> /dev/null; then
     IP=$(curl -s ifconfig.me)
@@ -135,14 +144,14 @@ else
   IP="localhost"
 fi
 
-# Step 6: Show access URLs
+# Step 7: Show access URLs
 echo -e "${GREEN}>> All $INSTANCE_COUNT Chromium containers are now running.${NC}"
 echo -e "\n${GREEN}📡 Access URLs:${NC}"
-for ((i=0; i<INSTANCE_COUNT; i++)); do
+for ((i=start_index; i<=end_index; i++)); do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
   echo -e "chromium${i} → http://$IP:$HTTP_PORT/  |  https://$IP:$HTTPS_PORT/"
 done
 
-# 🧘 Closing message
+# 🌟 Closing blessing
 echo -e "\n${GREEN}🌟 Saint Khen blesses your shortcut journey.\n🛋️  Stay lazy.${NC}"
