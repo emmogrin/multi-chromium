@@ -4,6 +4,18 @@
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+# 🌟 ASCII Blessing Banner
+echo -e "${GREEN}"
+cat << "EOF"
+   ╔═══════════════════════════════════════╗
+   ║             SAINT KHEN               ║
+   ║          Follow @admirkhen           ║
+   ╚═══════════════════════════════════════╝
+         The saints bless even the Sybils.
+                God loves all.
+EOF
+echo -e "${NC}"
+
 echo -e "${GREEN}>> Chromium MULTI-CONTAINER Setup (20 Instances)...${NC}"
 
 # Ask if password login should be enabled
@@ -14,9 +26,15 @@ if [[ "$USE_PASSWORD" == "y" || "$USE_PASSWORD" == "Y" ]]; then
   read -p "Enter Chromium password: " CHROME_PASS
 fi
 
-read -p "Enter your timezone (e.g. Europe/Lagos): " TIMEZONE
+read -p "Enter your timezone (e.g. Europe/Berlin): " TIMEZONE
 read -p "Enter homepage URL (e.g. https://example.com): " HOMEPAGE
 read -p "Are you running this on a VPS (y/n)? " VPS
+
+# Step 0: Ensure curl is installed
+if ! command -v curl &> /dev/null; then
+  echo -e "${GREEN}>> curl not found. Installing...${NC}"
+  sudo apt install curl -y
+fi
 
 # Step 1: Update system
 echo -e "${GREEN}>> Updating system packages...${NC}"
@@ -54,7 +72,6 @@ for i in {0..19}; do
 
   USERNAME="${BASE_USER}${i}"
 
-  # Start writing docker-compose file
   echo "services:" > docker-compose-${i}.yaml
   echo "  chromium${i}:" >> docker-compose-${i}.yaml
   echo "    image: lscr.io/linuxserver/chromium:latest" >> docker-compose-${i}.yaml
@@ -86,7 +103,7 @@ for i in {0..19}; do
   docker compose -f docker-compose-${i}.yaml up -d
 done
 
-# Step 6: Display access info
+# Step 6: Show access URLs
 echo -e "${GREEN}>> All 20 Chromium containers are now running.${NC}"
 
 if [[ "$VPS" == "y" || "$VPS" == "Y" ]]; then
