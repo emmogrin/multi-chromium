@@ -26,24 +26,31 @@ if [[ "$USE_PASSWORD" == "y" || "$USE_PASSWORD" == "Y" ]]; then
   read -p "Enter Chromium password: " CHROME_PASS
 fi
 
-read -p "Enter your timezone (e.g. Europe/Berlin): " TIMEZONE
 read -p "Enter homepage URL (e.g. https://example.com): " HOMEPAGE
 read -p "Are you running this on a VPS (y/n)? " VPS
 
-# Step 0: Ensure curl is installed
-if ! command -v curl &> /dev/null; then
-  echo -e "${GREEN}>> curl not found. Installing...${NC}"
-  sudo apt install curl -y
+# Step 0: Install tools if needed
+sudo apt update -y
+sudo apt install -y lsb-release
+
+if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null && ! command -v dig &> /dev/null; then
+  echo -e "${GREEN}>> Installing curl, wget, and dnsutils (dig)...${NC}"
+  sudo apt install curl wget dnsutils -y
 fi
 
-# Step 1: Update system
-echo -e "${GREEN}>> Updating system packages...${NC}"
-sudo apt update -y && sudo apt upgrade -y
+# Auto-detect timezone
+TZ=$(timedatectl show --value --property=Timezone 2>/dev/null)
+if [[ -z "$TZ" ]]; then
+  TZ="Etc/UTC"
+  echo -e "${GREEN}⚠️ Could not auto-detect timezone. Defaulting to UTC.${NC}"
+else
+  echo -e "${GREEN}🕓 Auto-detected timezone: $TZ${NC}"
+fi
 
-# Step 2: Install Docker if not installed
+# Step 1: Install Docker if not present
 if ! command -v docker &> /dev/null; then
   echo -e "${GREEN}>> Docker not found. Installing Docker...${NC}"
-  sudo apt-get install -y ca-certificates curl gnupg lsb-release
+  sudo apt-get install -y ca-certificates curl gnupg
   sudo install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -59,11 +66,11 @@ else
   echo -e "${GREEN}>> Docker is already installed. Skipping Docker installation.${NC}"
 fi
 
-# Step 3: Create base directory
+# Step 2: Create base directory
 mkdir -p ~/chromium/multi
 cd ~/chromium/multi
 
-# Step 4: Create 20 docker-compose files
+# Step 3: Create 20 docker-compose files
 for i in {0..19}; do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
@@ -87,7 +94,7 @@ for i in {0..19}; do
 
   echo "      - PUID=1000" >> docker-compose-${i}.yaml
   echo "      - PGID=1000" >> docker-compose-${i}.yaml
-  echo "      - TZ=${TIMEZONE}" >> docker-compose-${i}.yaml
+  echo "      - TZ=${TZ}" >> docker-compose-${i}.yaml
   echo "      - CHROME_CLI=${HOMEPAGE}" >> docker-compose-${i}.yaml
   echo "    volumes:" >> docker-compose-${i}.yaml
   echo "      - ${CONFIG_DIR}:/config" >> docker-compose-${i}.yaml
@@ -98,23 +105,34 @@ for i in {0..19}; do
   echo "    restart: unless-stopped" >> docker-compose-${i}.yaml
 done
 
-# Step 5: Launch all containers
+# Step 4: Launch all containers
 for i in {0..19}; do
   docker compose -f docker-compose-${i}.yaml up -d
 done
 
-# Step 6: Show access URLs
-echo -e "${GREEN}>> All 20 Chromium containers are now running.${NC}"
-
+# Step 5: Detect IP address
 if [[ "$VPS" == "y" || "$VPS" == "Y" ]]; then
-  IP=$(curl -s ifconfig.me)
+  if command -v curl &> /dev/null; then
+    IP=$(curl -s ifconfig.me)
+  elif command -v wget &> /dev/null; then
+    IP=$(wget -qO- https://ifconfig.me)
+  elif command -v dig &> /dev/null; then
+    IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
+  else
+    IP="localhost"
+  fi
 else
   IP="localhost"
 fi
 
+# Step 6: Show access URLs
+echo -e "${GREEN}>> All 20 Chromium containers are now running.${NC}"
 echo -e "\n${GREEN}📡 Access URLs:${NC}"
 for i in {0..19}; do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
   echo -e "chromium${i} → http://$IP:$HTTP_PORT/  |  https://$IP:$HTTPS_PORT/"
 done
+
+# 🧘 Closing message
+echo -e "\n${GREEN}🌟 Saint Khen blesses your shortcut journey.\n🛋️  Stay lazy.${NC}"
