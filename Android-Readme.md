@@ -15,7 +15,7 @@ Run multiple isolated Chromium browsers on your Android using QEMU and Docker in
 
 ---
 
-## 🔌 QEMU Command (Start Debian VM)
+## 🔌 QEMU Command (Start Debian VM) [skip if you are already logged in the vn]
 
 ```bash
 qemu-system-x86_64 \
@@ -38,6 +38,8 @@ qemu-system-x86_64 \
 # Inside Debian (via SSH or QEMU login):
 ```
 apt update && sudo apt install -y git
+```
+```
 git clone https://github.com/emmogrin/multi-chromium
 cd multi-chromium
 chmod +x multi-chromium.sh
