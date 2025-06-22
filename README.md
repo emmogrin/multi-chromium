@@ -105,6 +105,22 @@ Each container gets its own isolated config folder.
 
 ---
 
+# Optional 
+
+### 🧾 View Container Logs
+
+To check logs for all running Chromium containers, use:
+
+```bash
+./container-logs.sh
+```
+This shows you real-time logs from every chromium container (chromium0 → chromium19).
+Useful for debugging login issues, checking browser activity, or verifying uptime.
+
+📦 Make sure you're in the multi-chromium directory before running it.
+---
+
+
 🌟 Saint Khen blesses your shortcut journey.
 🛋️ Stay lazy.
 # multi-chromium
