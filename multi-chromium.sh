@@ -16,7 +16,15 @@ cat << "EOF"
 EOF
 echo -e "${NC}"
 
-echo -e "${GREEN}>> Chromium MULTI-CONTAINER Setup (20 Instances)...${NC}"
+echo -e "${GREEN}>> Chromium MULTI-CONTAINER Setup (Max 20 Instances)...${NC}"
+
+# Ask how many containers to run
+read -p "How many Chromium containers do you want to run? (default: 10, max: 20): " INSTANCE_COUNT
+INSTANCE_COUNT=${INSTANCE_COUNT:-10}
+if [[ $INSTANCE_COUNT -gt 20 ]]; then
+  INSTANCE_COUNT=20
+  echo "⚠️  Capped to 20 containers to prevent overload."
+fi
 
 # Ask if password login should be enabled
 read -p "Do you want to password-protect the browser? (y/n): " USE_PASSWORD
@@ -26,7 +34,9 @@ if [[ "$USE_PASSWORD" == "y" || "$USE_PASSWORD" == "Y" ]]; then
   read -p "Enter Chromium password: " CHROME_PASS
 fi
 
-read -p "Enter homepage URL (e.g. https://example.com): " HOMEPAGE
+read -p "Enter homepage URL (default: about:blank): " HOMEPAGE
+HOMEPAGE=${HOMEPAGE:-about:blank}
+
 read -p "Are you running this on a VPS (y/n)? " VPS
 
 # Step 0: Install tools if needed
@@ -70,8 +80,8 @@ fi
 mkdir -p ~/chromium/multi
 cd ~/chromium/multi
 
-# Step 3: Create 20 docker-compose files
-for i in {0..19}; do
+# Step 3: Create N docker-compose files
+for ((i=0; i<INSTANCE_COUNT; i++)); do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
   CONFIG_DIR="/root/chromium/multi/config${i}"
@@ -106,7 +116,7 @@ for i in {0..19}; do
 done
 
 # Step 4: Launch all containers
-for i in {0..19}; do
+for ((i=0; i<INSTANCE_COUNT; i++)); do
   docker compose -f docker-compose-${i}.yaml up -d
 done
 
@@ -126,9 +136,9 @@ else
 fi
 
 # Step 6: Show access URLs
-echo -e "${GREEN}>> All 20 Chromium containers are now running.${NC}"
+echo -e "${GREEN}>> All $INSTANCE_COUNT Chromium containers are now running.${NC}"
 echo -e "\n${GREEN}📡 Access URLs:${NC}"
-for i in {0..19}; do
+for ((i=0; i<INSTANCE_COUNT; i++)); do
   HTTP_PORT=$((3010 + i * 2))
   HTTPS_PORT=$((3011 + i * 2))
   echo -e "chromium${i} → http://$IP:$HTTP_PORT/  |  https://$IP:$HTTPS_PORT/"
