@@ -56,7 +56,17 @@ Open/copy any of them in your local browser(chrome or brave).
 
 🧹 Cleanup All Chromium Containers
 ```
+chmod +x cleanup.sh
 ./cleanup.sh
+```
+```
+cd 
+```
+```
+cd multi-chromium
+```
+```
+rm -rf multi-chromium
 ```
 Stops and removes all containers, volumes, and configs.
 
