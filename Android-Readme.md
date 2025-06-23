@@ -39,7 +39,7 @@ qemu-system-x86_64 \
 
 # Inside Debian (via SSH or QEMU login):
 ```
-apt update && sudo apt install -y git
+apt update && apt install -y git
 ```
 ```
 git clone https://github.com/emmogrin/multi-chromium
