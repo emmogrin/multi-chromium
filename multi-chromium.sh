@@ -43,7 +43,7 @@ read -p "Are you running this on a VPS (y/n)? " VPS
 sudo apt update -y
 sudo apt install -y lsb-release
 
-if ! command -v curl &> /dev/null && ! command -v wget &> /dev/null && ! command -v dig &> /dev/null; then
+if ! command -v curl &> /dev/null || ! command -v wget &> /dev/null || ! command -v dig &> /dev/null; then
   echo -e "${GREEN}>> Installing curl, wget, and dnsutils (dig)...${NC}"
   sudo apt install curl wget dnsutils -y
 fi
@@ -60,18 +60,14 @@ fi
 # Step 1: Install Docker if not present
 if ! command -v docker &> /dev/null; then
   echo -e "${GREEN}>> Docker not found. Installing Docker...${NC}"
-  sudo apt-get install -y ca-certificates curl gnupg
-  sudo install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-  echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update -y
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-  sudo apt update -y
-  sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  if ! command -v docker &> /dev/null; then
+    echo -e "${GREEN}>> APT install failed. Using official Docker install script as fallback...${NC}"
+    curl -fsSL https://get.docker.com | sh
+  fi
 else
   echo -e "${GREEN}>> Docker is already installed. Skipping Docker installation.${NC}"
 fi
