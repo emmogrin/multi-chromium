@@ -63,9 +63,6 @@ chmod +x cleanup.sh
 cd 
 ```
 ```
-cd multi-chromium
-```
-```
 rm -rf multi-chromium
 ```
 Stops and removes all containers, volumes, and configs.
