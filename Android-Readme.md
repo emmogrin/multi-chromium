@@ -40,7 +40,6 @@ qemu-system-x86_64 \
 # Inside Debian (via SSH or QEMU login):
 ```
 apt update && apt install -y git
-```bash
 ```
 ```
 apt install curl wget git build-essential -y
