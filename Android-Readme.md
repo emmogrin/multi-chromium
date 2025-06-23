@@ -48,9 +48,6 @@ apt install curl wget git build-essential -y
 ```
 curl -fsSL https://get.docker.com | sh
 ```
-
-```
-```
 ```
 git clone https://github.com/emmogrin/multi-chromium
 cd multi-chromium
