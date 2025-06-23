@@ -60,7 +60,6 @@ fi
 # Step 1: Install Docker if not present
 if ! command -v docker &> /dev/null; then
   echo -e "${GREEN}>> Docker not found. Installing Docker...${NC}"
-
   sudo apt-get update -y
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -125,12 +124,12 @@ for ((i=start_index; i<=end_index; i++)); do
   docker compose -f docker-compose-${i}.yaml up -d
 done
 
-# Step 6: Detect IP address
+# Step 6: Detect IP address (force IPv4)
 if [[ "$VPS" == "y" || "$VPS" == "Y" ]]; then
   if command -v curl &> /dev/null; then
-    IP=$(curl -s ifconfig.me)
+    IP=$(curl -4 -s ifconfig.me)
   elif command -v wget &> /dev/null; then
-    IP=$(wget -qO- https://ifconfig.me)
+    IP=$(wget -4 -qO- https://ifconfig.me)
   elif command -v dig &> /dev/null; then
     IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
   else
