@@ -55,6 +55,10 @@ Open/copy any of them in your local browser(chrome or brave).
 ---
 
 🧹 Cleanup All Chromium Containers
+
+```
+cd multi-chromium 
+```
 ```
 chmod +x cleanup.sh
 ./cleanup.sh
